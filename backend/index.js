@@ -1,14 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const DB_PATH = path.join(__dirname, 'equipment.db');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
 // Create uploads directory if it doesn't exist
@@ -48,61 +47,58 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 // Database setup
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) console.error('Database connection error:', err);
-  else console.log('Connected to SQLite database');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Initialize database tables
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+pool.query(`
+  CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     name TEXT NOT NULL,
     location TEXT,
     phone TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS equipment (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    owner_id INTEGER NOT NULL,
+  CREATE TABLE IF NOT EXISTS equipment (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id),
     name TEXT NOT NULL,
     description TEXT,
     category TEXT NOT NULL,
     daily_rate REAL NOT NULL,
-    availability INTEGER DEFAULT 1,
+    availability BOOLEAN DEFAULT true,
     image_url TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(owner_id) REFERENCES users(id)
-  )`);
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS rentals (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    equipment_id INTEGER NOT NULL,
-    renter_id INTEGER NOT NULL,
-    owner_id INTEGER NOT NULL,
+  CREATE TABLE IF NOT EXISTS rentals (
+    id SERIAL PRIMARY KEY,
+    equipment_id INTEGER NOT NULL REFERENCES equipment(id),
+    renter_id INTEGER NOT NULL REFERENCES users(id),
+    owner_id INTEGER NOT NULL REFERENCES users(id),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     total_cost REAL NOT NULL,
     status TEXT DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(equipment_id) REFERENCES equipment(id),
-    FOREIGN KEY(renter_id) REFERENCES users(id),
-    FOREIGN KEY(owner_id) REFERENCES users(id)
-  )`);
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS reviews (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    rental_id INTEGER NOT NULL,
-    reviewer_id INTEGER NOT NULL,
+  CREATE TABLE IF NOT EXISTS reviews (
+    id SERIAL PRIMARY KEY,
+    rental_id INTEGER NOT NULL REFERENCES rentals(id),
+    reviewer_id INTEGER NOT NULL REFERENCES users(id),
     rating INTEGER NOT NULL,
     comment TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(rental_id) REFERENCES rentals(id),
-    FOREIGN KEY(reviewer_id) REFERENCES users(id)
-  )`);
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`, (err) => {
+  if (err) console.error('Database initialization error:', err);
+  else console.log('Database tables initialized');
 });
 
 // Routes
@@ -110,9 +106,9 @@ const equipmentRoutes = require('./routes/equipment');
 const rentalRoutes = require('./routes/rentals');
 const userRoutes = require('./routes/users');
 
-app.use('/api/equipment', equipmentRoutes(db, upload));
-app.use('/api/rentals', rentalRoutes(db));
-app.use('/api/users', userRoutes(db));
+app.use('/api/equipment', equipmentRoutes(pool, upload));
+app.use('/api/rentals', rentalRoutes(pool));
+app.use('/api/users', userRoutes(pool));
 
 // Error handling
 app.use((err, req, res, next) => {

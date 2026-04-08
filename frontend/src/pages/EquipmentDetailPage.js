@@ -30,8 +30,8 @@ const EquipmentDetailPage = ({ user }) => {
   const fetchEquipmentDetail = useCallback(async () => {
     try {
       const [equipRes, rentalStatusRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/equipment/${id}`),
-        axios.get(`http://localhost:5000/api/rentals/equipment/${id}/status`)
+        axios.get(`/api/equipment/${id}`),
+        axios.get(`/api/rentals/equipment/${id}/status`)
       ]);
       
       setEquipment(equipRes.data);
@@ -210,7 +210,7 @@ const EquipmentDetailPage = ({ user }) => {
 
     setRenting(true);
     try {
-      await axios.post('http://localhost:5000/api/rentals', {
+      await axios.post('/api/rentals', {
         equipment_id: id,
         renter_id: user.id,
         owner_id: equipment.owner_id,
@@ -247,7 +247,7 @@ const EquipmentDetailPage = ({ user }) => {
     const extensionCost = calculateExtensionCost();
 
     try {
-      await axios.post(`http://localhost:5000/api/rentals/${userActiveRental.id}/extend`, {
+      await axios.post(`/api/rentals/${userActiveRental.id}/extend`, {
         new_end_date: extendEndDate,
         additional_cost: extensionCost
       });

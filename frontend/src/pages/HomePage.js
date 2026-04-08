@@ -14,8 +14,8 @@ const HomePage = () => {
     try {
       setLoading(true);
       const url = category 
-        ? `http://localhost:5000/api/equipment/category/${category}`
-        : 'http://localhost:5000/api/equipment';
+        ? `/api/equipment/category/${category}`
+        : '/api/equipment';
       const response = await axios.get(url);
       setEquipment(response.data);
       
@@ -23,7 +23,7 @@ const HomePage = () => {
       const statusMap = {};
       for (const item of response.data) {
         try {
-          const statusRes = await axios.get(`http://localhost:5000/api/rentals/equipment/${item.id}/status`);
+          const statusRes = await axios.get(`/api/rentals/equipment/${item.id}/status`);
           statusMap[item.id] = statusRes.data.isRented;
         } catch (error) {
           statusMap[item.id] = false;
@@ -99,7 +99,7 @@ const HomePage = () => {
                   <div className="equipment-image">
                     <img 
                       src={item.image_url && item.image_url.startsWith('http') ? item.image_url : 
-                           item.image_url ? `http://localhost:5000${item.image_url}` : 
+                           item.image_url ? `${item.image_url}` : 
                            'https://via.placeholder.com/300x200'} 
                       alt={item.name} 
                     />

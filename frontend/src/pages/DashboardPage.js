@@ -44,8 +44,8 @@ const DashboardPage = ({ user, setUser }) => {
   const fetchUserData = useCallback(async () => {
     try {
       const [rentalsRes, equipmentRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/rentals/user/${user.id}`),
-        axios.get(`http://localhost:5000/api/users/${user.id}/equipment`)
+        axios.get(`/api/rentals/user/${user.id}`),
+        axios.get(`/api/users/${user.id}/equipment`)
       ]);
       setRentals(rentalsRes.data);
       setUserEquipment(equipmentRes.data);
@@ -85,7 +85,7 @@ const DashboardPage = ({ user, setUser }) => {
 
   const handleUpdateProfile = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/users/${user.id}`, editedProfile);
+      await axios.put(`/api/users/${user.id}`, editedProfile);
       const updatedUser = { ...user, ...editedProfile };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -132,7 +132,7 @@ const DashboardPage = ({ user, setUser }) => {
         formData.append('image', imageFile);
       }
 
-      await axios.post('http://localhost:5000/api/equipment', formData);
+      await axios.post('/api/equipment', formData);
       alert('Equipment added successfully!');
       setNewEquipment({ name: '', description: '', category: 'Tractors', daily_rate: '' });
       setImageFile(null);
@@ -159,7 +159,7 @@ const DashboardPage = ({ user, setUser }) => {
 
   const handleUpdateEquipment = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/equipment/${editingEquipmentId}`, editingEquipment);
+      await axios.put(`/api/equipment/${editingEquipmentId}`, editingEquipment);
       alert('Equipment updated successfully!');
       setEditingEquipmentId(null);
       fetchUserData();
@@ -171,7 +171,7 @@ const DashboardPage = ({ user, setUser }) => {
   const handleDeleteEquipment = async (equipmentId) => {
     if (window.confirm('Are you sure you want to delete this equipment?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/equipment/${equipmentId}`);
+        await axios.delete(`/api/equipment/${equipmentId}`);
         alert('Equipment deleted successfully!');
         fetchUserData();
       } catch (error) {
@@ -182,7 +182,7 @@ const DashboardPage = ({ user, setUser }) => {
 
   const updateRentalStatus = async (rentalId, status) => {
     try {
-      await axios.put(`http://localhost:5000/api/rentals/${rentalId}`, { status });
+      await axios.put(`/api/rentals/${rentalId}`, { status });
       alert('Rental status updated!');
       fetchUserData();
     } catch (error) {
@@ -208,7 +208,7 @@ const DashboardPage = ({ user, setUser }) => {
     const additionalCost = additionalDays * rental.daily_rate;
 
     try {
-      const response = await axios.post(`http://localhost:5000/api/rentals/${rental.id}/extend`, {
+      const response = await axios.post(`/api/rentals/${rental.id}/extend`, {
         new_end_date: extensionEndDate,
         additional_cost: additionalCost
       });
@@ -641,7 +641,7 @@ const DashboardPage = ({ user, setUser }) => {
                   <div key={eq.id} className="equipment-item">
                     {eq.image_url && (
                       <div className="equipment-item-image">
-                        <img src={`http://localhost:5000${eq.image_url}`} alt={eq.name} />
+                        <img src={`${eq.image_url}`} alt={eq.name} />
                       </div>
                     )}
                     <h3>{eq.name}</h3>

@@ -47,7 +47,7 @@ const RegisterPage = ({ setUser }) => {
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/api/users/register', formData);
+      await axios.post('/api/users/register', formData);
       alert('Registration successful! Please login.');
       navigate('/login');
     } catch (error) {
