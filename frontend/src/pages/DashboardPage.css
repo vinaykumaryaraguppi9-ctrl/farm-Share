@@ -759,7 +759,8 @@
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.4s ease-out;
-  backdrop-filter: blur(4x);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 .modal {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { MapPin, User, Filter, Tractor, Shovel, Axe, Package, Zap } from 'lucide-react';
+import { Filter, Tractor, Shovel, Axe, Package, Zap } from 'lucide-react';
 import './HomePage.css';
 
 const HomePage = () => {
