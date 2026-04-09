@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  password  String
+  name      String
+  location  String?
+  phone     String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  ownedEquipment Equipment[]
+  rentals        Rental[] @relation("Renter")
+  ownedRentals   Rental[] @relation("Owner")
+  reviews        Review[]
+}
+
+model Equipment {
+  id          Int     @id @default(autoincrement())
+  ownerId     Int
+  name        String
+  description String?
+  category    String  // Tractors, Plows, Harvesters, Balers, Sprayers
+  dailyRate   Float
+  imageUrl    String?
+  availability Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  rentals  Rental[]
+
+  @@index([ownerId])
+}
+
+model Rental {
+  id          Int     @id @default(autoincrement())
+  equipmentId Int
+  renterId    Int
+  ownerId     Int
+  startDate   String  // YYYY-MM-DD format
+  endDate     String  // YYYY-MM-DD format
+  totalCost   Float
+  status      String  @default("pending") // pending, approved, rejected, active, completed
+  createdAt   DateTime @default(now())
+
+  // Relations
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  renter    User     @relation("Renter", fields: [renterId], references: [id], onDelete: Cascade)
+  owner     User     @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  reviews   Review[]
+
+  @@index([equipmentId])
+  @@index([renterId])
+  @@index([ownerId])
+}
+
+model Review {
+  id         Int     @id @default(autoincrement())
+  rentalId   Int
+  reviewerId Int
+  rating     Int     // 1-5 stars
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  rental   Rental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  reviewer User   @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([rentalId])
+  @@index([reviewerId])
+}

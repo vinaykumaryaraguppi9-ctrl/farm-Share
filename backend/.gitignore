@@ -1,6 +1,0 @@
-node_modules/
-uploads/
-equipment.db
-.env
-.DS_Store
-*.log
